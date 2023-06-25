@@ -1,13 +1,15 @@
 import React, { useRef, useContext } from 'react'
+
 import sytles from './LoginForm.module.scss'
+
 import { useNavigate } from 'react-router-dom'
-import { login } from 'apis/services/users'
-import toast from 'components/common/Toast'
+
+import { useLogin } from 'apis/services/users'
 import Button from 'components/common/Button'
 import LabelInput from 'components/common/LabelInput'
 import TextButton from 'components/common/TextButton'
+import toast from 'components/common/Toast'
 import useAuthInput from 'hooks/useAuthInput'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { ThemeContext } from 'styles/ThemeProvider'
 
 function LoginForm() {
@@ -15,7 +17,6 @@ function LoginForm() {
   const navigate = useNavigate()
   const emailRef = useRef<HTMLInputElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
-  const queryClient = useQueryClient()
   const {
     value: email,
     onChange: changeEmail,
@@ -28,28 +29,23 @@ function LoginForm() {
     condition: condition,
   } = useAuthInput({ type: 'password' }) // 사용자 인증 input 커스텀 훅
 
+  const { mutate: login } = useLogin(email, password)
+
   // 로그인 api 요청
   function onClickLogin() {
-    queryClient.invalidateQueries(['user'])
     // 이메일 형식이 맞고, 비밀번호가 입력된 경우에만 요청을 보냄
     if (!isEmailPass || !password) {
       toast.addMessage('error', `이메일과 비밀번호를 정확하게 입력해주세요`)
       return
     }
-    login(email, password)
-      .then(() => {
-        navigate('/main')
-      })
-      .catch((err) => {
-        toast.addMessage('error', err.data.message)
-      })
+    login()
   }
 
   return (
     <div className={sytles.container}>
-      <div className={sytles.inputs}>
+      <form className={sytles.inputs}>
         <LabelInput
-          ref={emailRef}
+          inputRef={emailRef}
           label="이메일"
           value={email}
           onChange={changeEmail}
@@ -61,9 +57,10 @@ function LoginForm() {
           }}
           isPass={isEmailPass}
           placeholder="이메일을 입력해주세요"
+          autoComplete="email"
         />
         <LabelInput
-          ref={passwordRef}
+          inputRef={passwordRef}
           label="비밀번호"
           value={password}
           onChange={changePw}
@@ -80,9 +77,12 @@ function LoginForm() {
         <TextButton
           text="비밀번호 찾기"
           color={theme === 'light' ? 'tertiary' : 'white'}
-          onClick={() => navigate('/password')}
+          onClick={(event) => {
+            event.preventDefault()
+            navigate('/password')
+          }}
         />
-      </div>
+      </form>
       <div className={sytles.buttons}>
         <Button
           text="로그인"

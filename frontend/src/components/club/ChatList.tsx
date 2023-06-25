@@ -1,7 +1,9 @@
 import React, { RefObject } from 'react'
+
 import styles from './ChatList.module.scss'
-import ChatItem from 'components/club/ChatItem'
 import { Chat, ChatMember } from 'types/chat.interface'
+
+import ChatItem from 'components/club/ChatItem'
 
 type ChatListProps = {
   ref1: RefObject<HTMLDivElement>

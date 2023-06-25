@@ -1,19 +1,20 @@
 import React from 'react'
+
 import styles from './NavigationBar.module.scss'
+import { UserInfo } from 'types/user.interface'
+
 import {
   IoPeopleOutline,
   IoHomeOutline,
   IoPodiumOutline,
 } from 'react-icons/io5'
-import Loading from './Loading'
 import { NavLink } from 'react-router-dom'
-import { User } from 'types/user.interface'
 
-type NavigationBalProps = {
-  userInfo: User
+type NavigationBarProps = {
+  userInfo: UserInfo
 }
 
-function NavigationBar({ userInfo }: NavigationBalProps) {
+function NavigationBar({ userInfo }: NavigationBarProps) {
   return (
     <nav className={styles.nav}>
       <NavLink
@@ -34,7 +35,7 @@ function NavigationBar({ userInfo }: NavigationBalProps) {
         <IoPodiumOutline />
       </NavLink>
       <NavLink
-        to={userInfo?.clubId ? `/club/main` : '/club/none'}
+        to={userInfo?.clubId ? `/club/${userInfo?.clubId}/main` : '/club/none'}
         className={({ isActive }) =>
           isActive ? styles.active : styles.inactive
         }

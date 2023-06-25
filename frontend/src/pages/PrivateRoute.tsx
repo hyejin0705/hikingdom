@@ -1,39 +1,49 @@
 import React from 'react'
+
 import styles from './PrivateRoute.module.scss'
+
 import { Navigate, Outlet } from 'react-router-dom'
-import useIsMobile from 'hooks/useIsMobile'
-import NavigationBar from 'components/common/NavigationBar'
-import useUserQuery from 'hooks/useUserQuery'
+import { useRecoilValue } from 'recoil'
+
+import { useUserInfoQuery } from 'apis/services/users'
+import ErrorMessage from 'components/common/ErrorMessage'
 import Loading from 'components/common/Loading'
+import NavigationBar from 'components/common/NavigationBar'
+import useIsMobile from 'hooks/useIsMobile'
+import { refreshTokenState } from 'recoil/atoms'
 
 /*
 사용자 로그인 여부에 따라 로그인페이지로 라우팅하는 컴포넌트 
 */
 
 export default function PrivateRoute() {
-  const { data: userInfo, isLoading, isError } = useUserQuery() // userInfo를 해당 컴포넌트에서 불러온다.
+  const { data: userInfo, isLoading, isError } = useUserInfoQuery() // userInfo를 해당 컴포넌트에서 불러온다.
 
-  // 로그인 여부 체크
-  const refreshToken = localStorage.getItem('refreshToken')
+  const isMobile = useIsMobile() // 모바일 여부 체크
+  const refreshToken = useRecoilValue(refreshTokenState) // 로그인 여부 체크
+
+  // 로그인하지 않았을 때, 라우팅
   if (!refreshToken) {
     return <Navigate to="/login" />
   }
 
-  const isMobile = useIsMobile() // 모바일 여부 판단 커스텀 훅
+  if (isLoading) {
+    return <Loading />
+  }
+
+  if (isError) {
+    return <ErrorMessage />
+  }
 
   return (
     <>
-      {userInfo ? (
-        isMobile ? (
-          <Outlet />
-        ) : (
-          <div className={styles.container}>
-            <Outlet />
-            <NavigationBar userInfo={userInfo} />
-          </div>
-        )
+      {isMobile ? (
+        <Outlet />
       ) : (
-        <Loading />
+        <div className={styles.container}>
+          <Outlet />
+          <NavigationBar userInfo={userInfo} />
+        </div>
       )}
     </>
   )

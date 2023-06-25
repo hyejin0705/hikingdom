@@ -1,13 +1,15 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState, useMemo } from 'react'
+
 import styles from './SearchClubPage.module.scss'
-import { getClubs } from 'apis/services/clubs'
-import RankList from 'components/common/RankList'
+import { InfiniteClubInfo } from 'types/club.interface'
+
+import { useInfiniteClubsQuery } from 'apis/services/clubs'
 import InputDropdown from 'components/common/InputDropdown'
+import Loading from 'components/common/Loading'
+import RankList from 'components/common/RankList'
 import useDebounce from 'hooks/useDebounce'
 import useInfiniteScroll from 'hooks/useInfiniteScroll'
 import { ThemeContext } from 'styles/ThemeProvider'
-import { ClubInfo } from 'types/club.interface'
-import Loading from 'components/common/Loading'
 
 // 서치바의 드롭다운  SelectBox에 넘길 옵션 배열
 const filterOptions = [
@@ -20,8 +22,6 @@ function SearchClubPage() {
 
   const [query, setQuery] = useState('') // input 태그의 검색 쿼리
   const [filter, setFilter] = useState('name') // 선택된 필터
-  const [clubInfoArray, setClubInfoArray] = useState<ClubInfo[]>([]) // 클럽 정보 배열
-  const [isEnd, setIsEnd] = useState(false) // 무한스크롤 마지막 정보 여부
   const infiniteRef = useRef<HTMLDivElement>(null) // 무한스크롤 ref 요소
 
   const debouncedQuery = useDebounce(query) // debounced query
@@ -31,36 +31,31 @@ function SearchClubPage() {
     setQuery(event.target.value)
   }
 
-  // 필터 옵션이나 쿼리가 변할 때마다, 클럽 정보 api 요청
+  const {
+    refetch: infiniteClubs,
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteClubsQuery(filter, debouncedQuery)
+
+  // 입력값이랑, filter 값이 달라질 때마다 호출
   useEffect(() => {
-    getClubs(filter, query).then((res) => {
-      setClubInfoArray(res.data.result.content)
-      setIsEnd(!res.data.result.hasNext)
-      if (infiniteRef.current) {
-        infiniteRef.current.scrollTo({
-          top: 0,
-          left: 0,
-          behavior: 'smooth',
-        })
-      }
-    })
+    infiniteClubs()
   }, [filter, debouncedQuery])
 
-  // 무한 스크롤 시 동작할, api 요청 함수
-  function loadMore() {
-    return getClubs(filter, query, clubInfoArray.slice(-1)[0].clubId)
-      .then((res) => {
-        setClubInfoArray((clubInfoArray) => [
-          ...clubInfoArray,
-          ...res.data.result,
-        ])
-        setIsEnd(!res.data.result.hasNext)
-      })
-      .catch(() => {})
-  }
+  // infiniteQuery로 받은 배열을 가공
+  const clubInfoArray = useMemo(() => {
+    if (!data) return []
+    return data.pages.flatMap((page: InfiniteClubInfo) => page.content)
+  }, [data])
 
-  // 무한 스크롤 커스텀 훅
-  const { isLoading } = useInfiniteScroll({ ref: infiniteRef, loadMore, isEnd })
+  // 무한스크롤 커스텀 훅(동작 요소, 동작 함수)
+  useInfiniteScroll({
+    ref: infiniteRef,
+    loadMore: fetchNextPage,
+    isEnd: !hasNextPage,
+  })
 
   return (
     <div className={`page ${theme} p-md ${styles.container}`}>

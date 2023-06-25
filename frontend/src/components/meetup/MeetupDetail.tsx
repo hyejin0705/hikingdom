@@ -1,11 +1,11 @@
 import React from 'react'
+
 import styles from './MeetupDetail.module.scss'
 
-import IconText from 'components/common/IconText'
-
-import mount from 'assets/images/mountain.png'
 import calendar from 'assets/images/calendar.png'
 import clock from 'assets/images/clock.png'
+import mount from 'assets/images/mountain.png'
+import IconText from 'components/common/IconText'
 
 type MeetupDetailProps = {
   mountain: string

@@ -1,7 +1,10 @@
 import React from 'react'
+
 import styles from './RankHeader.module.scss'
+
 import { BiSearch } from 'react-icons/bi'
 import { useNavigate } from 'react-router-dom'
+
 import trophy from 'assets/images/trophy.png'
 import IconButton from 'components/common/IconButton'
 

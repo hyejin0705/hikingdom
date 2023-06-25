@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import React from 'react'
+
 
 import styles from './ConfirmModal.module.scss'
+
 import Button from 'components/common/Button'
 
 type ConfirmModalProps = {

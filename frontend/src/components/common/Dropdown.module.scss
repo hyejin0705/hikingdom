@@ -48,9 +48,7 @@
   min-width: 100%;
   max-height: 12rem;
   overflow-y: auto;
-}
 
-.options {
   &::-webkit-scrollbar {
     display: block;
     width: 0.5rem;

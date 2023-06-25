@@ -1,4 +1,5 @@
 import React from 'react'
+
 import styles from './LevelModal.module.scss'
 
 import LEVEL_TO_IMG from 'constants/levels'

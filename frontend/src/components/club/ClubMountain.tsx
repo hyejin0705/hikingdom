@@ -1,10 +1,10 @@
-import * as THREE from 'three'
 import React, { useRef, useState, useEffect } from 'react'
-import { useFrame } from '@react-three/fiber'
-import { Canvas, useLoader } from '@react-three/fiber'
+
 import { OrbitControls } from '@react-three/drei'
+import { useFrame, Canvas, useLoader } from '@react-three/fiber'
+import { useNavigate, useParams } from 'react-router'
+import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { useNavigate } from 'react-router'
 
 type ClubMountainprops = {
   zoom: number
@@ -33,9 +33,9 @@ function ClubMountain({ zoom, assetInfo }: ClubMountainprops) {
       {/* 일광과 같이, 아주 먼 거리의 광원에서 평행으로 진행하는 빛 */}
 
       <group>
-        {assetInfo.map((info, index) => (
+        {assetInfo.map((info) => (
           <AssetMesh
-            key={index}
+            key={`${info.row}-${info.column}`}
             position={new THREE.Vector3(info.row, 0, info.column)}
             url={info.assetUrl}
             meetupId={info.meetupId ? info.meetupId : null}
@@ -66,13 +66,7 @@ type AssetMeshProps = {
 }
 
 // Mesh 생성 함수
-function AssetMesh({
-  position,
-  url,
-  meetupId,
-  check,
-  ...props
-}: AssetMeshProps) {
+function AssetMesh({ position, url, meetupId, check }: AssetMeshProps) {
   const navigate = useNavigate()
   const gltf = useLoader(GLTFLoader, url)
   const meshRef = useRef<THREE.Mesh>(null)
@@ -80,6 +74,10 @@ function AssetMesh({
   const [prevCheck, setPrevCheck] = useState(false)
   const animationTime = 1.5 // 애니메이션 진행 시간 (초)
   let elapsedTime = 0 // 경과한 시간 (초)
+
+  const clubId = useParams() as {
+    clubId: string
+  }
 
   useEffect(() => {
     if (check && !prevCheck) {
@@ -104,7 +102,7 @@ function AssetMesh({
 
   const handleOnClick = () => {
     if (check && meetupId) {
-      navigate(`/club/meetup/${meetupId}/detail`)
+      navigate(`/club/${parseInt(clubId.clubId)}/meetup/${meetupId}/detail`)
     }
   }
 

@@ -1,19 +1,21 @@
 import React, { useContext } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
+
 import styles from './AlarmItem.module.scss'
-import { useNavigate } from 'react-router'
-import { UserAlarm } from 'types/user.interface'
-import useUserQuery from 'hooks/useUserQuery'
+import { Alarm } from 'types/user.interface'
 
 import { GoPrimitiveDot } from 'react-icons/go'
-import Toast from 'components/common/Toast'
+import { useNavigate } from 'react-router'
 
-function AlarmItem({ alarm }: { alarm: UserAlarm }) {
+import { useUserInfoQuery } from 'apis/services/users'
+import Toast from 'components/common/Toast'
+import { ThemeContext } from 'styles/ThemeProvider'
+
+function AlarmItem({ alarm }: { alarm: Alarm }) {
   const { theme } = useContext(ThemeContext)
   const navigate = useNavigate()
 
   // clubId 확인
-  const { data: userInfo } = useUserQuery()
+  const { data: userInfo } = useUserInfoQuery()
 
   // read, unread 구분
   const alarmStyle = alarm.isRead ? styles.read : styles.unread
@@ -28,7 +30,9 @@ function AlarmItem({ alarm }: { alarm: UserAlarm }) {
 
   const onClick = () => {
     if (userInfo?.clubId === alarm.clubId) {
-      alarm.category === 'NEW_ASSET' ? navigate('/club/main') : navigate(`/club/meetup/${alarm.meetupId}/detail`)
+      alarm.category === 'NEW_ASSET'
+        ? navigate('/club/main')
+        : navigate(`/club/${alarm.clubId}/meetup/${alarm.meetupId}/detail`)
     } else {
       Toast.addMessage('error', '탈퇴한 클럽의 일정입니다.')
     }

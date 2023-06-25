@@ -1,10 +1,13 @@
 import React from 'react'
+
 import styles from './FindPwForm.module.scss'
+
 import { useNavigate } from 'react-router-dom'
-import services from 'apis/services'
-import toast from 'components/common/Toast'
+
+import { useChangePw } from 'apis/services/users'
 import Button from 'components/common/Button'
 import LabelInput from 'components/common/LabelInput'
+import toast from 'components/common/Toast'
 import useAuthInput from 'hooks/useAuthInput'
 
 function FindPwForm() {
@@ -16,23 +19,15 @@ function FindPwForm() {
     isPass: isEmailPass,
   } = useAuthInput({ type: 'email' }) // 사용자 인증 input 커스텀 훅
 
-  function findPw() {
+  const { mutate: changePw } = useChangePw(email)
+
+  function onClickChangePw() {
     // 이메일 형식이 맞은 경우에만 api 요청을 보냄
     if (!isEmailPass) {
       toast.addMessage('error', '이메일을 정확하게 입력해주세요')
       return
     }
-    services
-      .findPw(email)
-      .then(() => {
-        toast.addMessage(
-          'success',
-          '해당 이메일로 새 비밀번호가 전송되었습니다'
-        )
-      })
-      .catch(() => {
-        toast.addMessage('error', '해당 이메일에 대한 정보가 없습니다')
-      })
+    changePw()
   }
 
   return (
@@ -53,7 +48,7 @@ function FindPwForm() {
           text="비밀번호 초기화"
           color="primary"
           size="lg"
-          onClick={findPw}
+          onClick={onClickChangePw}
         />
         <Button
           text="로그인"

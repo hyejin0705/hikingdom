@@ -1,9 +1,11 @@
 import React, { useContext } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
+
 import styles from './AssetModal.module.scss'
 
-import IconButton from 'components/common/IconButton'
 import { IoIosClose } from 'react-icons/io'
+
+import IconButton from 'components/common/IconButton'
+import { ThemeContext } from 'styles/ThemeProvider'
 
 type AssetModalProps = {
   name: string

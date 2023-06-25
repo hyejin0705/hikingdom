@@ -1,30 +1,33 @@
-import React, { useContext, useState } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
+import React, { useContext } from 'react'
+
 import styles from './ClubMainPage.module.scss'
-import { getClubInfo } from 'apis/services/clubs'
-import { useQuery } from '@tanstack/react-query'
-import { ClubDetailInfo } from 'types/club.interface'
-import Loading from 'components/common/Loading'
-import SearchClubMt from 'components/club/SearchClubMt'
+
+import { useClubInfoQuery } from 'apis/services/clubs'
+import { useUserInfoQuery } from 'apis/services/users'
 import ClubRecordInfo from 'components/club/ClubRecordInfo'
+import SearchClubMt from 'components/club/SearchClubMt'
+import ErrorMessage from 'components/common/ErrorMessage'
+import Loading from 'components/common/Loading'
 import MeetupIntroduction from 'components/meetup/MeetupIntroduction'
-import useUserQuery from 'hooks/useUserQuery'
+import { ThemeContext } from 'styles/ThemeProvider'
 
 function ClubMainPage() {
   const { theme } = useContext(ThemeContext)
 
-  const { data: userInfo } = useUserQuery()
+  const { data: userInfo } = useUserInfoQuery()
   const clubId = userInfo?.clubId
 
-  const { data: clubInfo } = useQuery<ClubDetailInfo>(
-    ['ClubDetailInfo', clubId],
-    () => getClubInfo(clubId || 0),
-    {
-      enabled: !!clubId,
-    }
-  )
+  const { isLoading, isError, data: clubInfo } = useClubInfoQuery(clubId || 0)
 
-  return clubInfo ? (
+  if (isLoading) {
+    return <Loading />
+  }
+
+  if (isError) {
+    return <ErrorMessage />
+  }
+
+  return (
     <>
       <div className={`page-gradation upside p-md ${theme} ${styles.page}`}>
         <ClubRecordInfo
@@ -39,8 +42,6 @@ function ClubMainPage() {
         <SearchClubMt assetInfo={clubInfo.assets} />
       </div>
     </>
-  ) : (
-    <Loading />
   )
 }
 

@@ -1,121 +1,97 @@
 import React, { useState } from 'react'
+
 import styles from './MeetupMembers.module.scss'
-
-import Image from 'components/common/Image'
-import Button from 'components/common/Button'
-import Modal from 'components/common/Modal'
 import MemberModal from './MemberModal'
-import { MeetupMemberInfo } from 'types/meetup.interface'
-import { ClubMember } from 'types/club.interface'
-import toast from 'components/common/Toast'
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import { useParams } from 'react-router-dom'
+
 import {
-  getMeetupMembers,
-  getMembersDetail,
-  updateJoin,
-  deleteJoin,
+  useMeetupMemberQuery,
+  useJoinMeetup,
+  useUnJoinMeetup,
 } from 'apis/services/meetup'
-import useUserQuery from 'hooks/useUserQuery'
+import Button from 'components/common/Button'
+import ErrorMessage from 'components/common/ErrorMessage'
+import Image from 'components/common/Image'
+import Loading from 'components/common/Loading'
+import Modal from 'components/common/Modal'
 
-function MeetupMembers() {
-  const queryClient = useQueryClient()
+type MeetupMembersProps = {
+  clubId: number
+  meetupId: number
+}
+
+function MeetupMembers({ clubId, meetupId }: MeetupMembersProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [memberDetail, setMemberDetail] = useState<ClubMember[]>()
-  const { meetupId } = useParams() as {
-    meetupId: string
-  }
-
-  const { data: userInfo } = useUserQuery()
-  const clubId = userInfo?.clubId
 
   // 일정 멤버 조회
-  const { data: members } = useQuery<MeetupMemberInfo>(['meetupMembers'], () =>
-    getMeetupMembers(clubId || 0, Number(meetupId))
-  )
-
-  // 모달 ON OFF
-  const onClickDetail = () => {
-    if (!clubId) return
-    setIsOpen(true)
-    getMembersDetail(clubId, parseInt(meetupId)).then((res) =>
-      setMemberDetail(res)
-    )
-  }
+  const {
+    isLoading: isMeetupMembersLoading,
+    isError: isMeetupMembersError,
+    data: meetupMembers,
+  } = useMeetupMemberQuery(clubId, meetupId)
 
   // 일정 참여
-  const { mutate: onClickJoin } = useMutation(
-    () => updateJoin(Number(clubId), Number(meetupId)),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['meetupMembers'])
-        queryClient.invalidateQueries(['meetup'])
-        toast.addMessage('success', '일정에 참여했습니다')
-      },
-      onError: (err: any) => {
-        toast.addMessage('error', err.data.message)
-      },
-    }
-  )
+  const {
+    isLoading: isJoinLoading,
+    isError: isJoinError,
+    mutate: joinMeetup,
+  } = useJoinMeetup(clubId, meetupId)
 
   // 일정 참여 취소
-  const { mutate: onClickWithdraw } = useMutation(
-    () => deleteJoin(Number(clubId), Number(meetupId)),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['meetupMembers'])
-        queryClient.invalidateQueries(['meetup'])
-        toast.addMessage('success', '일정을 취소했습니다')
-      },
-      onError: (err: any) => {
-        toast.addMessage('error', err.data.message)
-      },
-    }
-  )
+  const {
+    isLoading: isUnjoinLoading,
+    isError: isUnjoinError,
+    mutate: unJoinMeetup,
+  } = useUnJoinMeetup(clubId, meetupId)
+
+  if (isMeetupMembersLoading || isJoinLoading || isUnjoinLoading) {
+    return <Loading />
+  }
+
+  if (isMeetupMembersError || isJoinError || isUnjoinError) {
+    return <ErrorMessage />
+  }
 
   return (
-    <>
-      {isOpen && memberDetail && (
+    <div className={styles.meetup}>
+      {isOpen && (
         <Modal onClick={() => setIsOpen(false)}>
-          <MemberModal memberList={memberDetail} />
+          <MemberModal clubId={clubId} meetupId={meetupId} />
         </Modal>
       )}
-      <div className={styles.meetup}>
-        <div className={styles.titles}>
-          <span className={styles.title}>
-            참여 멤버 ({members?.totalMember}명)
-          </span>
-          {members?.isJoin ? (
-            <Button
-              text="참여취소"
-              color="secondary"
-              size="xs"
-              onClick={() => onClickWithdraw()}
-            />
-          ) : (
-            <Button
-              text="참여"
-              color="primary"
-              size="xs"
-              onClick={() => onClickJoin()}
-            />
-          )}
-        </div>
-        <div className={styles.members}>
-          {members?.memberInfo.slice(0, 6).map((member) => (
-            <Image
-              key={member.memberId}
-              imgUrl={member.profileUrl}
-              size="sm"
-              isSquare={true}
-            />
-          ))}
-          <div className={styles.more} onClick={onClickDetail}>
-            +
-          </div>
+      <div className={styles.titles}>
+        <span className={styles.title}>
+          참여 멤버 ({meetupMembers?.totalMember}명)
+        </span>
+        {meetupMembers?.isJoin ? (
+          <Button
+            text="참여취소"
+            color="secondary"
+            size="xs"
+            onClick={() => unJoinMeetup()}
+          />
+        ) : (
+          <Button
+            text="참여"
+            color="primary"
+            size="xs"
+            onClick={() => joinMeetup()}
+          />
+        )}
+      </div>
+      <div className={styles.members}>
+        {meetupMembers?.memberInfo.slice(0, 6).map((member) => (
+          <Image
+            key={member.memberId}
+            imgUrl={member.profileUrl}
+            size="sm"
+            isSquare={true}
+          />
+        ))}
+        <div className={styles.more} onClick={() => setIsOpen(true)}>
+          +
         </div>
       </div>
-    </>
+    </div>
   )
 }
 

@@ -1,7 +1,10 @@
 import React, { useContext, useState } from 'react'
+
 import styles from './SearchLayout.module.scss'
+
 import { Outlet } from 'react-router'
 import { useNavigate, useLocation } from 'react-router-dom'
+
 import SearchBar from 'components/common/SearchBar'
 import { ThemeContext } from 'styles/ThemeProvider'
 

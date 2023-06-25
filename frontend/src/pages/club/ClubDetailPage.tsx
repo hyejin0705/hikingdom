@@ -1,56 +1,55 @@
-import React, { useContext, useEffect, useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { ThemeContext } from 'styles/ThemeProvider'
-import styles from './ClubDetailPage.module.scss'
-import { getClubInfo } from 'apis/services/clubs'
-import { postJoinClub } from 'apis/services/clubs'
-import { ClubDetailInfo } from 'types/club.interface'
-import useUserQuery from 'hooks/useUserQuery'
-import { useQuery } from '@tanstack/react-query'
-import { getPosition } from 'utils/getPosition'
+import React, { useContext, useEffect } from 'react'
 
-import toast from 'components/common/Toast'
+import styles from './ClubDetailPage.module.scss'
+
+import { useNavigate, useParams } from 'react-router-dom'
+
+import { useClubInfoQuery, useJoinClub } from 'apis/services/clubs'
+import { useUserInfoQuery } from 'apis/services/users'
+import ClubMountain from 'components/club/ClubMountain'
+import ClubRecordInfo from 'components/club/ClubRecordInfo'
 import Button from 'components/common/Button'
+import ErrorMessage from 'components/common/ErrorMessage'
 import Loading from 'components/common/Loading'
 import PageHeader from 'components/common/PageHeader'
-import ClubRecordInfo from 'components/club/ClubRecordInfo'
 import MeetupIntroduction from 'components/meetup/MeetupIntroduction'
-import ClubMountain from 'components/club/ClubMountain'
+import { ThemeContext } from 'styles/ThemeProvider'
 
 function ClubDetailPage() {
   const { theme } = useContext(ThemeContext)
   const navigate = useNavigate()
 
   const clubId = Number(useParams<string>().clubId)
-  const { data: userInfo } = useUserQuery()
+  const { data: userInfo } = useUserInfoQuery()
 
-  const { data: clubInfo } = useQuery<ClubDetailInfo>(
-    ['ClubDetailInfo', { clubId: clubId }],
-    () => getClubInfo(clubId)
-  )
+  const { isLoading, isError, data: clubInfo } = useClubInfoQuery(clubId || 0)
 
-  function onClickJoinClub() {
-    postJoinClub(clubId)
-      .then(() => toast.addMessage('success', '가입신청이 완료되었습니다'))
-      .catch((err) => toast.addMessage('error', `${err.data.message}`))
-  }
+  const { isLoading: isJoinClubLoading, mutate: joinClub } = useJoinClub(clubId)
 
   useEffect(() => {
     if (clubId === userInfo?.clubId) {
-      navigate('/club/main')
+      navigate(`/club/${clubId}/main`)
     }
   }, [userInfo])
 
-  return clubInfo && userInfo ? (
+  if (isLoading || isJoinClubLoading) {
+    return <Loading />
+  }
+
+  if (isError) {
+    return <ErrorMessage />
+  }
+
+  return (
     <div className={`page-gradation upside p-sm ${theme} ${styles.page}`}>
       <PageHeader title={clubInfo.clubName} color="primary" />
       <div className={styles.button}>
-        {!userInfo.clubId && (
+        {userInfo?.clubId && (
           <Button
             text="가입 신청"
             size="sm"
             color="primary"
-            onClick={onClickJoinClub}
+            onClick={() => joinClub()}
           />
         )}
       </div>
@@ -65,8 +64,6 @@ function ClubDetailPage() {
       </div>
       <ClubMountain zoom={2} assetInfo={clubInfo.assets} />
     </div>
-  ) : (
-    <Loading />
   )
 }
 

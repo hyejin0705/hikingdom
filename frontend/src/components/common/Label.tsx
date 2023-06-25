@@ -1,5 +1,7 @@
 import React, { useContext } from 'react'
+
 import styles from './Label.module.scss'
+
 import { ThemeContext } from 'styles/ThemeProvider'
 
 type LabelProps = {

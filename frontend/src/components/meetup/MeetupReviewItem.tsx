@@ -1,43 +1,42 @@
 import React, { useContext, useState } from 'react'
-import styles from './MeetupReviewItem.module.scss'
-import { useParams } from 'react-router-dom'
-import { ThemeContext } from 'styles/ThemeProvider'
-import Image from 'components/common/Image'
 
-import { HiTrash, HiLightBulb } from 'react-icons/hi'
+import styles from './MeetupReviewItem.module.scss'
 import { MeetupReview } from 'types/meetup.interface'
 
-import useUserQuery from 'hooks/useUserQuery'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteReview } from 'apis/services/meetup'
-import { report } from 'apis/services/users'
-import toast from 'components/common/Toast'
-import Modal from 'components/common/Modal'
+import { useMutation } from '@tanstack/react-query'
+import { HiTrash, HiLightBulb } from 'react-icons/hi'
+
+import { useDeleteReview } from 'apis/services/meetup'
+import { report, useUserInfoQuery } from 'apis/services/users'
 import ConfirmModal from 'components/club/ConfirmModal'
+import ErrorMessage from 'components/common/ErrorMessage'
+import Image from 'components/common/Image'
+import Loading from 'components/common/Loading'
+import Modal from 'components/common/Modal'
+import toast from 'components/common/Toast'
+import { ThemeContext } from 'styles/ThemeProvider'
 
 type ReviewProps = {
   review: MeetupReview
+  clubId: number
+  meetupId: number
 }
 
-function MeetupReviewItem({ review }: ReviewProps) {
+function MeetupReviewItem({ review, clubId, meetupId }: ReviewProps) {
   const { theme } = useContext(ThemeContext)
-  const { data: userInfo } = useUserQuery()
-  const { meetupId } = useParams() as { meetupId: string }
-  const queryClient = useQueryClient()
+  const { data: userInfo } = useUserInfoQuery()
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isSirenOpen, setIsSirenOpen] = useState(false)
 
-  const onClickDelete = useMutation(
-    () =>
-      deleteReview(Number(userInfo?.clubId), Number(meetupId), review.reviewId),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['reviews'])
-        toast.addMessage('success', '후기가 삭제되었습니다')
-        setIsDeleteOpen(false)
-      },
-    }
-  )
+  // 후기 삭제
+  const {
+    isLoading: isDeleteReviewLoading,
+    isError: isDeleteReviewError,
+    mutateAsync: deleteReview,
+  } = useDeleteReview(clubId, meetupId, review.reviewId)
+  const onClickDeleteReview = () => {
+    deleteReview().then(() => setIsDeleteOpen(false))
+  }
 
   const onclickReport = useMutation(() => report('REVIEW', review.reviewId), {
     onSuccess: () => {
@@ -50,6 +49,14 @@ function MeetupReviewItem({ review }: ReviewProps) {
     },
   })
 
+  if (isDeleteReviewLoading) {
+    return <Loading />
+  }
+
+  if (isDeleteReviewError) {
+    return <ErrorMessage />
+  }
+
   return (
     <>
       {isDeleteOpen && (
@@ -57,7 +64,7 @@ function MeetupReviewItem({ review }: ReviewProps) {
           <ConfirmModal
             title="후기를 삭제하시겠습니까?"
             buttonText="후기 삭제"
-            onClickDelete={() => onClickDelete.mutate()}
+            onClickDelete={onClickDeleteReview}
             onClickCloseModal={() => setIsDeleteOpen(false)}
           />
         </Modal>

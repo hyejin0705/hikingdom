@@ -1,11 +1,11 @@
 import React from 'react'
+
 import styles from './MtContent.module.scss'
 
-import IconText from 'components/common/IconText'
-
-import peaksImg from 'assets/images/mountain.png'
 import addressImg from 'assets/images/marker.png'
 import descriptionImg from 'assets/images/message.png'
+import peaksImg from 'assets/images/mountain.png'
+import IconText from 'components/common/IconText'
 
 type MtContentProps = {
   address: string

@@ -1,5 +1,6 @@
-// 산 검색
-// 오늘의 산
+import { InfinitePage } from './common.interface'
+
+// 산 정보 (오늘의 추천 산, 산 검색)
 export interface MtInfo {
   mountainId: number
   name: string
@@ -8,6 +9,12 @@ export interface MtInfo {
   imgUrl: string
 }
 
+// 산 검색 (무한 스크롤)
+export interface InfiniteMtInfo extends InfinitePage {
+  content: MtInfo[]
+}
+
+// 3D 산 정보
 export interface MtAssetInfo {
   assetId: number
   name: string

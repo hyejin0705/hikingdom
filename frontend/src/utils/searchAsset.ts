@@ -14,5 +14,6 @@ export function searchAsset(arr: any[], filter?: string) {
     }
     return { arr, uniqueNameList: Array.from(uniqueNameList) }
   }
+
   return { arr, uniqueNameList: Array.from(uniqueNameList) }
 }

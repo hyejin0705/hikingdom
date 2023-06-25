@@ -1,9 +1,10 @@
 import React from 'react'
+
 import styles from './TextSendBar.module.scss'
 
+import airplane from 'assets/images/airplane.png'
 import IconButton from 'components/common/IconButton'
 
-import airplane from 'assets/images/airplane.png'
 
 type TextSendBarProps = {
   placeholder: string

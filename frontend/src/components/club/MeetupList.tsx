@@ -1,7 +1,9 @@
 import React from 'react'
+
 import styles from './MeetupList.module.scss'
-import MeetupItem from 'components/club/MeetupItem'
 import { MeetupInfo } from 'types/meetup.interface'
+
+import MeetupItem from 'components/club/MeetupItem'
 
 type MeetupListProps = {
   meetupInfoArray: MeetupInfo[]

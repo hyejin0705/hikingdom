@@ -1,4 +1,5 @@
 import React from 'react'
+
 import styles from './IconText.module.scss'
 
 type IconTextProps = {
@@ -26,7 +27,7 @@ function IconText({
       className={`${styles.container} ${styles[size]} ${textStyle} ${flexStyle}`}
     >
       {imgSrc && <img src={imgSrc} />}
-      {icon && icon}
+      {icon}
       {text}
     </div>
   )

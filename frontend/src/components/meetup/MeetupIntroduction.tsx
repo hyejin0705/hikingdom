@@ -1,6 +1,8 @@
 import React, { useContext } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
+
 import styles from './MeetupIntroduction.module.scss'
+
+import { ThemeContext } from 'styles/ThemeProvider'
 
 type MeetupIntroductionProp = {
   content: string

@@ -1,73 +1,50 @@
 import React, { useContext } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
-import styles from './PwUpdateForm.module.scss'
-import { useNavigate } from 'react-router-dom'
-import { AxiosError } from 'axios'
-import { useMutation } from '@tanstack/react-query'
 
-import LabelInput from 'components/common/LabelInput'
+import styles from './UpdatePwForm.module.scss'
+
+
+import { useUpdatePw } from 'apis/services/users'
 import Button from 'components/common/Button'
+import LabelInput from 'components/common/LabelInput'
 import toast from 'components/common/Toast'
-
 import useAuthInput from 'hooks/useAuthInput'
 import useCheckPw from 'hooks/useCheckPw'
+import { ThemeContext } from 'styles/ThemeProvider'
 
-import { updatePw } from 'apis/services/users'
-
-import useUserQuery from 'hooks/useUserQuery'
-
-function PwUpdateForm() {
+function UpdatePwForm() {
   const { theme } = useContext(ThemeContext)
-  const navigate = useNavigate()
 
-  const { data: userInfo } = useUserQuery()
-  // 비밀번호 변경
+  // 인증관련 커스텀 훅
   const {
     value: password,
     onChange: changePw,
     isPass: isPwPass,
     condition: pwCond,
   } = useAuthInput({ type: 'password' })
-
   const {
     value: newPassword,
     onChange: changeNewPw,
     isPass: isNewPwPass,
     condition: newPwCond,
   } = useAuthInput({ type: 'password' })
-
   const {
     value: checkPassword,
     onChange: changeCheckPw,
     isPass: isCheckPwPass,
   } = useCheckPw({ password: newPassword })
 
-  const update = useMutation(
-    () => updatePw(password, newPassword, checkPassword),
-    {
-      onSuccess: () => {
-        toast.addMessage('success', '비밀번호가 변경되었습니다')
-        navigate(`/profile/${userInfo?.nickname}`)
-      },
-      onError: (err: AxiosError) => {
-        if (err.status === 401) {
-          toast.addMessage('error', '현재 비밀번호가 일치하지 않습니다')
-        }
-      },
-    }
-  )
+  // 비밀번호 변경 요청
+  const { mutate: updatePw } = useUpdatePw(password, newPassword, checkPassword)
 
   const onClickUpdate = () => {
     if (!isNewPwPass) {
       toast.addMessage('error', '비밀번호 형식이 맞지 않습니다')
     }
-
     if (!isCheckPwPass) {
       toast.addMessage('error', '새비밀번호가 일치하지 않습니다')
       return
     }
-
-    update.mutate()
+    updatePw()
   }
 
   return (
@@ -106,4 +83,4 @@ function PwUpdateForm() {
   )
 }
 
-export default PwUpdateForm
+export default UpdatePwForm

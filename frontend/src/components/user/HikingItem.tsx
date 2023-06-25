@@ -1,32 +1,28 @@
 import React, { useContext, MouseEvent, useState } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
-import { useNavigate } from 'react-router-dom'
-import styles from './PastMeetupItem.module.scss'
 
-import IconText from 'components/common/IconText'
+import styles from './HikingItem.module.scss'
+import { HikingSimple } from 'types/user.interface'
 
-import { BiCalendarAlt } from 'react-icons/bi'
 import { AiOutlineClockCircle } from 'react-icons/ai'
+import { BiCalendarAlt } from 'react-icons/bi'
 import { FiChevronRight } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 
-import mountain from 'assets/images/mountain.png'
-import time from 'assets/images/hourglass.png'
-import distance from 'assets/images/shoe.png'
 import height from 'assets/images/hot_air_balloon.png'
-
-import TrackingInfo from './TrackingInfo'
+import time from 'assets/images/hourglass.png'
+import mountain from 'assets/images/mountain.png'
+import distance from 'assets/images/shoe.png'
+import IconText from 'components/common/IconText'
 import Modal from 'components/common/Modal'
+import HikingDetail from 'components/user/HikingDetail'
+import { ThemeContext } from 'styles/ThemeProvider'
+import { convertMeterToKm } from 'utils/convertMeterToKm'
+import { convertMinutesToHHMM } from 'utils/convertMinutesToHHMM'
 
-import { UserHiking } from 'types/user.interface'
-import { convertToKm } from 'utils/convertToKm'
-import { convertToTime } from 'utils/convertToTime'
-import useUserQuery from 'hooks/useUserQuery'
-
-export default function PastMeetupItem({ hiking }: { hiking: UserHiking }) {
+function HikingItem({ hiking }: { hiking: HikingSimple }) {
   const { theme } = useContext(ThemeContext)
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
-  const { data: userInfo } = useUserQuery()
 
   // 일정 상세보기로 이동하는 함수
   const onClickOpenModal = () => {
@@ -43,7 +39,7 @@ export default function PastMeetupItem({ hiking }: { hiking: UserHiking }) {
     <>
       {isOpen && (
         <Modal onClick={() => setIsOpen(false)}>
-          <TrackingInfo hikingRecordId={hiking.hikingRecordId} />
+          <HikingDetail hikingRecordId={hiking.hikingRecordId} />
         </Modal>
       )}
       <div
@@ -84,12 +80,12 @@ export default function PastMeetupItem({ hiking }: { hiking: UserHiking }) {
         <div className={styles.flexbox}>
           <IconText
             imgSrc={time}
-            text={convertToTime(hiking.totalDuration)}
+            text={convertMinutesToHHMM(hiking.totalDuration)}
             size="sm"
           />
           <IconText
             imgSrc={distance}
-            text={convertToKm(hiking.totalDistance) + 'km'}
+            text={convertMeterToKm(hiking.totalDistance) + 'km'}
             size="sm"
           />
           <IconText imgSrc={height} text={`${hiking.maxAlt} m`} size="sm" />
@@ -98,3 +94,5 @@ export default function PastMeetupItem({ hiking }: { hiking: UserHiking }) {
     </>
   )
 }
+
+export default HikingItem

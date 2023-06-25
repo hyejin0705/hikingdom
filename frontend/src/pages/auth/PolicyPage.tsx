@@ -1,8 +1,10 @@
 import React, { useContext } from 'react'
+
 import styles from './PolicyPage.module.scss'
-import { PERSONAL_AGREEMENT, USAGE_AGREEMENT } from 'constants/agreements'
-import PageHeader from 'components/common/PageHeader'
+
 import LabelTextArea from 'components/common/LabelTextArea'
+import PageHeader from 'components/common/PageHeader'
+import { PERSONAL_AGREEMENT, USAGE_AGREEMENT } from 'constants/agreements'
 import { ThemeContext } from 'styles/ThemeProvider'
 
 function PolicyPage() {

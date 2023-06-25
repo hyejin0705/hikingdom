@@ -1,9 +1,8 @@
 import React from 'react'
-import styles from './MtDetail.module.scss'
 
-import MtTitle from './MtTitle'
 import MtContent from './MtContent'
-
+import styles from './MtDetail.module.scss'
+import MtTitle from './MtTitle'
 import { MtInfoDetail } from 'types/mt.interface'
 
 type MtDetailProps = {

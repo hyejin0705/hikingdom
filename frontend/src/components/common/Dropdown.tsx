@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
+
 import styles from './Dropdown.module.scss'
+
 import { BsFillCaretDownFill } from 'react-icons/bs'
 
 // 옵션 타입 정의

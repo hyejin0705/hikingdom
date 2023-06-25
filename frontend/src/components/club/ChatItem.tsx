@@ -1,11 +1,14 @@
 import React, { useContext, useState, useEffect } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
-import { useNavigate } from 'react-router-dom'
+
 import styles from './ChatItem.module.scss'
+import { Chat, ChatMember } from 'types/chat.interface'
+
+import { useNavigate } from 'react-router-dom'
+
+import { useUserInfoQuery } from 'apis/services/users'
 import Image from 'components/common/Image'
 import LEVEL_TO_IMG from 'constants/levels'
-import useUserQuery from 'hooks/useUserQuery'
-import { Chat, ChatMember } from 'types/chat.interface'
+import { ThemeContext } from 'styles/ThemeProvider'
 
 type ChatItemProps = {
   chat: Chat
@@ -21,7 +24,7 @@ type User = {
 
 function ChatItem({ chat, members, isContinued }: ChatItemProps) {
   const { theme } = useContext(ThemeContext)
-  const { data: userInfo } = useUserQuery()
+  const { data: userInfo } = useUserInfoQuery()
   const [user, setUser] = useState<User>()
   const navigate = useNavigate()
 
@@ -70,7 +73,7 @@ function ChatItem({ chat, members, isContinued }: ChatItemProps) {
           </div>
         )}
         <div className={styles.content}>
-          <div className={`${styles.chatContent} ${styles[`${theme}`]}`}>
+          <div className={`${styles.chatContent} ${styles[theme]}`}>
             {chat.content}
           </div>
           <div className={styles.time}>{chat.sendAt.split(' ')[1]}</div>

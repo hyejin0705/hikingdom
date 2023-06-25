@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect, useContext } from 'react'
+import React, { useState, useMemo, useEffect, useContext, memo } from 'react'
+
 import styles from './Calendar.module.scss'
-import { useNavigate, useParams } from 'react-router'
-import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+
 import {
   format,
   addDays,
@@ -13,6 +13,9 @@ import {
   endOfWeek,
   isSameMonth,
 } from 'date-fns'
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
+import { useNavigate, useParams } from 'react-router'
+
 import Button from 'components/common/Button'
 import IconButton from 'components/common/IconButton'
 import { ThemeContext } from 'styles/ThemeProvider'
@@ -20,23 +23,21 @@ import { ThemeContext } from 'styles/ThemeProvider'
 const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토']
 
 type CalendarProps = {
-  today: Date
   meetups: number[]
-  onChangeMonth: (month: string) => void
-  onClickDate: (date: string) => void
+  onChangeMonth: (month: string) => void // 월 변경 시, 실행 할 함수
+  onClickDate: (date: string) => void // 날짜 박스 클릭 시, 실행 할 함수
 }
 
-function Calendar({
-  today,
-  meetups,
-  onChangeMonth,
-  onClickDate,
-}: CalendarProps) {
+function Calendar({ meetups, onChangeMonth, onClickDate }: CalendarProps) {
   const { theme } = useContext(ThemeContext)
-  const navigate = useNavigate()
 
-  // 오늘 날짜 기반으로, 현재 달력이 바라보는 날짜 설정
-  const [currentDate, setCurrentDate] = useState(today)
+  const navigate = useNavigate()
+  const clubId = useParams() as {
+    clubId: string
+  }
+
+  const [currentDate, setCurrentDate] = useState(new Date()) // 현재 달력이 바라보는 날짜
+
   // 현재 달력이 바라보는 날짜를 기반으로, 달력의 시작일자와 마지막 일자 반환
   const { calendarStart, calendarEnd } = useMemo(() => {
     const monthStart = startOfMonth(currentDate) // 현 월의 시작 일자
@@ -46,32 +47,32 @@ function Calendar({
     return { calendarStart, calendarEnd }
   }, [currentDate])
 
-  // 날짜 변경 시 마다 onChangeMonth 실행
+  // 날짜(월) 변경 시 마다 onChangeMonth 실행
   useEffect(() => {
     onChangeMonth(format(currentDate, 'yyyy-MM'))
   }, [currentDate])
 
   // 왼쪽 화살표 버튼 클릭 시, currentDate에서 한 달 minus
   function onClickPreviousMonth() {
-    setCurrentDate(subMonths(currentDate, 1))
+    setCurrentDate((currentDate) => subMonths(currentDate, 1))
   }
 
   // 오른쪽 화살표 버튼 클릭 시, currentDate에서 한 달 plus
   function onClickNextMonth() {
-    setCurrentDate(addMonths(currentDate, 1))
+    setCurrentDate((currentDate) => addMonths(currentDate, 1))
   }
 
-  // 월 변경 시마다, 해당 월의 첫 일로 setCurrentDate 업데이트
+  // 날짜 input으로 월 변경 시마다, 해당 월의 첫 일로 setCurrentDate 업데이트
   function onChangeSetCurrentDate(event: React.ChangeEvent<HTMLInputElement>) {
     const [year, month] = event.target.value.split('-')
     const date = new Date(parseInt(year), parseInt(month) - 1)
     setCurrentDate(date)
   }
 
-  // 달력 날짜 박스 Array 형성
-  const dateboxes = []
+  // 날짜(월)이 발뀔 때마다 달력 날짜 박스 Array 형성
+  const dateBoxes = []
   let tempDate = calendarStart
-  const todayStringDate = format(today, 'yyyy-MM-dd')
+  const todayStringDate = format(new Date(), 'yyyy-MM-dd')
   while (tempDate <= calendarEnd) {
     const day = tempDate.getDay() // 요일: 0이면 일요일, 6이면 토요일
     const date = tempDate.getDate() // 일자
@@ -81,18 +82,28 @@ function Calendar({
     // 오늘에 따른 today 클래스
     const todayClass = todayStringDate === stringDate ? styles.today : ''
     // 일정 유무에 따른 meetup 클래스
-    const meetupClass = meetups.includes(date) ? styles.meetup : ''
+    const meetupClass =
+      isSameMonth(currentDate, fullDate) && meetups.includes(date)
+        ? styles.meetup
+        : ''
     // 요일에 따른 color 클래스
-    const colorClass =
-      day === 0 ? styles.sunday : day === 6 ? styles.saturday : ''
+    let colorClass = ''
+    if (day === 0) {
+      colorClass = styles.sunday
+    } else if (day === 6) {
+      colorClass = styles.saturday
+    }
     // 월에 따른 background-clor 클래스
     const bgColorClass = !isSameMonth(currentDate, fullDate) ? styles.gray : ''
     // 월에 따른 onClick 함수 다르게 할당
     const onClick = !isSameMonth(currentDate, fullDate)
-      ? () => setCurrentDate(fullDate)
-      : () => onClickDate(stringDate)
+      ? () => {
+          console.log(4)
+          setCurrentDate(fullDate)
+        } // 동일 월이 아닐 경우, 해당 날짜로 curretDate 업데이트
+      : () => onClickDate(stringDate) // 동일 월일 경우, onClickDate 실행
 
-    dateboxes.push(
+    dateBoxes.push(
       <div
         key={stringDate}
         className={`${styles.datebox} ${colorClass} ${bgColorClass} ${todayClass} ${meetupClass}`}
@@ -121,17 +132,19 @@ function Calendar({
           <div key={day}>{day}</div>
         ))}
       </div>
-      <div className={`${styles.gridbox} ${styles.calendar}`}>{dateboxes}</div>
+      <div className={`${styles.gridbox} ${styles.calendar}`}>{dateBoxes}</div>
       <div className={styles.button}>
         <Button
           text="일정생성"
           color="primary"
           size="sm"
-          onClick={() => navigate(`/club/meetup/create`)}
+          onClick={() =>
+            navigate(`/club/${parseInt(clubId.clubId)}/meetup/create`)
+          }
         />
       </div>
     </div>
   )
 }
 
-export default Calendar
+export default memo(Calendar)

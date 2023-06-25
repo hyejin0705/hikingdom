@@ -1,0 +1,16 @@
+@use 'src/styles/colors' as *;
+
+.container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.message {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: clr(gray-clr);
+}

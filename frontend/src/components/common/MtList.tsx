@@ -1,7 +1,9 @@
 import React from 'react'
+
 import styles from './MtList.module.scss'
-import MtItem from 'components/common/MtItem'
 import { MtInfo } from 'types/mt.interface'
+
+import MtItem from 'components/common/MtItem'
 
 type MtListProps = {
   mtInfoArray: MtInfo[] // 산 정보 배열

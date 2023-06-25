@@ -1,5 +1,7 @@
 import React from 'react'
+
 import styles from './Toast.module.scss'
+
 import { createRoot } from 'react-dom/client'
 import {
   FaCheckCircle,

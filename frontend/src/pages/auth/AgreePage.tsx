@@ -1,5 +1,7 @@
 import React, { useContext } from 'react'
+
 import styles from './AgreePage.module.scss'
+
 import AgreeForm from 'components/auth/AgreeForm'
 import PageHeader from 'components/common/PageHeader'
 import { ThemeContext } from 'styles/ThemeProvider'

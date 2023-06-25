@@ -1,9 +1,12 @@
 import React from 'react'
+
 import styles from './IndexPage.module.scss'
+
 import { useNavigate } from 'react-router-dom'
+
 import mountainVideo from 'assets/videos/mountain.mp4'
-import Logo from 'components/common/Logo'
 import Button from 'components/common/Button'
+import Logo from 'components/common/Logo'
 
 function IndexPage() {
   const navigate = useNavigate()

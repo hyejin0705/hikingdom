@@ -1,42 +1,42 @@
-import React, { useMemo, useContext } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useContext } from 'react'
+
 import styles from './MtDetailPage.module.scss'
-import { getMountainInfo } from 'apis/services/mountains'
-import { useQuery } from '@tanstack/react-query'
-import { MtInfoDetail } from 'types/mt.interface'
+
+import { useParams } from 'react-router-dom'
+
+import { useMountainInfoQuery } from 'apis/services/mountains'
+import ErrorMessage from 'components/common/ErrorMessage'
 import Loading from 'components/common/Loading'
-import MtDetail from 'components/main/MtDetail'
 import PageHeader from 'components/common/PageHeader'
-import { untilMidnight } from 'utils/untilMidnight'
+import MtDetail from 'components/main/MtDetail'
+import useRedirect from 'hooks/useRedirect'
 import { ThemeContext } from 'styles/ThemeProvider'
 
 function MtDetailPage() {
   const { theme } = useContext(ThemeContext)
 
-  const mountainId = useParams() as {
+  const { mountainId } = useParams() as {
     mountainId: string
   }
-  const queryTime = useMemo(() => {
-    return untilMidnight()
-  }, [])
 
-  const { data: mtInfo } = useQuery<MtInfoDetail>(
-    ['mountainInfo', { mountainId: mountainId }],
-    () => getMountainInfo(Number(mountainId.mountainId)),
-    {
-      cacheTime: queryTime,
-      staleTime: queryTime,
-    }
-  )
+  const [parsedMountainId] = useRedirect(mountainId)
 
-  return mtInfo ? (
+  const { isLoading, isError, data } = useMountainInfoQuery(parsedMountainId)
+
+  if (isLoading) {
+    return <Loading />
+  }
+
+  if (isError) {
+    return <ErrorMessage />
+  }
+
+  return (
     <div className={`page ${theme} p-sm ${styles.container}`}>
-      <img src={mtInfo.imgUrl} className={styles.image} />
+      <img src={data.imgUrl} className={styles.image} />
       <PageHeader title="" url="/main" color="light" />
-      <MtDetail mtInfo={mtInfo} />
+      <MtDetail mtInfo={data} />
     </div>
-  ) : (
-    <Loading />
   )
 }
 

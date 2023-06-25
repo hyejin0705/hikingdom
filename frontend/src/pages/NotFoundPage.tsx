@@ -1,26 +1,36 @@
-import React, { useContext } from 'react'
+import React from 'react'
+
 import styles from './NotFoundPage.module.scss'
+
 import { useNavigate } from 'react-router-dom'
-import Button from 'components/common/Button'
-import { ThemeContext } from 'styles/ThemeProvider'
+
+import { ReactComponent as Mountain } from 'assets/svgs/background_mountain.svg'
 import { ReactComponent as Cloud } from 'assets/svgs/cloud.svg'
-import { ReactComponent as Mountain } from 'assets/svgs/lake_mountain.svg'
+import Button from 'components/common/Button'
+
 function NotFoundPage() {
-  const { theme } = useContext(ThemeContext)
   const navigate = useNavigate()
 
+  const DivCloud = (
+    <div>
+      <Cloud />
+    </div>
+  )
+
   return (
-    <div className={`page ${theme} ${styles.page}`}>
+    <div className={`page ${styles.page}`}>
+      <Mountain className={styles.mountain} />
       <div className={styles.clouds}>
-        <Cloud className={styles.cloud1} />
-        <Cloud className={styles.cloud2} />
-        <Cloud className={styles.cloud3} />
-        <Cloud className={styles.cloud4} />
-        <Cloud className={styles.cloud5} />
+        {DivCloud}
+        {DivCloud}
+        {DivCloud}
+        {DivCloud}
+        {DivCloud}
+        {DivCloud}
       </div>
       <div className={styles.content}>
+        <h1>404</h1>
         <p>요청하신 페이지를 찾을 수 없습니다</p>
-
         <Button
           text="메인으로"
           size="md"
@@ -28,7 +38,6 @@ function NotFoundPage() {
           onClick={() => navigate('/main')}
         />
       </div>
-      <Mountain className={styles.mountain} />
     </div>
   )
 }

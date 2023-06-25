@@ -1,47 +1,71 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+
 import styles from './ClubMeetupPage.module.scss'
+
+import { format } from 'date-fns'
+import { useParams } from 'react-router-dom'
+
+import { useDateMeetupsQuery, useMonthMeetupsQuery } from 'apis/services/clubs'
 import Calendar from 'components/club/Calendar'
 import MeetupList from 'components/club/MeetupList'
-import { getMonthMeetups, getDateMeetups } from 'apis/services/clubs'
-import { MeetupInfo } from 'types/meetup.interface'
-import { format } from 'date-fns'
-import useUserQuery from 'hooks/useUserQuery'
+import ErrorMessage from 'components/common/ErrorMessage'
+import Loading from 'components/common/Loading'
+import useRedirect from 'hooks/useRedirect'
 
 function ClubMeetupPage() {
-  const { data: userInfo } = useUserQuery()
-  const clubId = userInfo?.clubId?.toString()
-
-  const [monthMeetups, setMonthMeetups] = useState([])
-  const [dateMeetups, setDateMeetups] = useState<MeetupInfo[]>([])
-
-  // 월별 일정을 가져오는 함수
-  function onChangeGetMonthMeetups(month: string) {
-    if (!clubId) return
-    getMonthMeetups(clubId, month).then((res) => {
-      setMonthMeetups(res.data.result.startAt)
-    })
+  // 클럽 아이디 url로 부터 조회
+  const { clubId } = useParams() as {
+    clubId: string
   }
+  const [parsedClubId] = useRedirect(clubId) // 클럽 아이디가 양의 정수가 아닐 경우, redirect
 
-  // 일별 일정을 가져오는 함수
-  function onClickGetDateMeetups(date: string) {
-    if (!clubId) return
-    getDateMeetups(clubId, date).then((res) => {
-      setDateMeetups(res.data.result)
-    })
-  }
+  const [month, setMonth] = useState(format(new Date(), 'yyyy-MM')) // 현재 월
+  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd')) // 현재 일
 
-  // 마운트 시 오늘 일정 가져오기
-  useEffect(() => {
-    const today = new Date()
-    const stringToday = format(today, 'yyyy-MM-dd')
-    onClickGetDateMeetups(stringToday)
+  // 월별 일정 조회하는 리액트 쿼리 커스텀 훅
+  const {
+    data: monthMeetups,
+    refetch: getMonthMeetups,
+    isLoading: monthLoading,
+    isError: monthError,
+  } = useMonthMeetupsQuery(parsedClubId, month)
+
+  // 달력의 월이 바뀔 때마다 현재 월(month)을 업데이트
+  const onChangeGetMonthMeetups = useCallback((month: string) => {
+    setMonth(month)
   }, [])
+
+  // 현재 월(month) 변화 시 월별 일정 조회 refetch 동작
+  useEffect(() => {
+    getMonthMeetups()
+  }, [month])
+
+  // 일별 일정 조회하는 리액트 쿼리 커스텀 훅
+  const {
+    data: dateMeetups,
+    refetch: getDateMeetups,
+    isLoading: dateLoading,
+    isError: dateError,
+  } = useDateMeetupsQuery(parsedClubId, date)
+
+  //  달력의 일이 바뀔 때마다 현재 일(date)을 업데이트
+  const onClickGetDateMeetups = useCallback((date: string) => {
+    setDate(date)
+  }, [])
+
+  // 현재 일(date) 변화시 일별 일정 조회 refetch 동작
+  useEffect(() => {
+    getDateMeetups()
+  }, [date])
+
+  if (monthLoading || dateLoading) return <Loading />
+
+  if (monthError || dateError) return <ErrorMessage />
 
   return (
     <div className={`page p-md ${styles.container}`}>
       <Calendar
-        today={new Date()}
-        meetups={monthMeetups}
+        meetups={monthMeetups.startAt}
         onChangeMonth={onChangeGetMonthMeetups}
         onClickDate={onClickGetDateMeetups}
       />

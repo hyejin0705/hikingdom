@@ -1,7 +1,10 @@
 import React, { useContext } from 'react'
+
 import styles from './Modal.module.scss'
-import { ThemeContext } from 'styles/ThemeProvider'
+
 import ReactDOM from 'react-dom'
+
+import { ThemeContext } from 'styles/ThemeProvider'
 
 type ModalProps = {
   onClick: () => void // 닫는 함수

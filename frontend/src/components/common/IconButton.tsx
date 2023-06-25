@@ -1,4 +1,5 @@
 import React from 'react'
+
 import styles from './IconButton.module.scss'
 
 type IconButtonProps = {
@@ -22,7 +23,7 @@ function IconButton({
       onClick={onClick}
     >
       {imgSrc && <img src={imgSrc} />}
-      {icon && icon}
+      {icon}
     </div>
   )
 }

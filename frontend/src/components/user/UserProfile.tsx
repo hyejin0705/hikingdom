@@ -1,123 +1,150 @@
 import React, { useContext, useState } from 'react'
+
 import styles from './UserProfile.module.scss'
-import { ThemeContext } from 'styles/ThemeProvider'
-import { useNavigate, useParams } from 'react-router-dom'
-
-import Button from 'components/common/Button'
-import Image from 'components/common/Image'
-import IconButton from 'components/common/IconButton'
-import UserInfo from 'components/user/UserInfo'
-
-import LevelModal from 'components/user/LevelModal'
-import Modal from 'components/common/Modal'
-import toast from 'components/common/Toast'
 
 import { BiEdit } from 'react-icons/bi'
+import { FaMoon, FaSun } from 'react-icons/fa'
 import { HiLightBulb } from 'react-icons/hi'
-import { FiChevronLeft } from 'react-icons/fi'
-import { FaSun, FaMoon } from 'react-icons/fa'
-import { UserRecord, User } from 'types/user.interface'
-import LEVEL_TO_IMG from 'constants/levels'
+import { useNavigate, useParams } from 'react-router-dom'
+
+import {
+  useProfileQuery,
+  useReport,
+  useUserInfoQuery,
+} from 'apis/services/users'
 import bell from 'assets/images/bell.png'
-
-import { logout, report } from 'apis/services/users'
-import useUserQuery from 'hooks/useUserQuery'
+import ConfirmModal from 'components/club/ConfirmModal'
+import ErrorMessage from 'components/common/ErrorMessage'
+import IconButton from 'components/common/IconButton'
+import Image from 'components/common/Image'
+import Loading from 'components/common/Loading'
+import Modal from 'components/common/Modal'
 import PageHeader from 'components/common/PageHeader'
+import LevelModal from 'components/user/LevelModal'
+import UserInfo from 'components/user/UserInfo'
+import LEVEL_TO_IMG from 'constants/levels'
+import { ThemeContext } from 'styles/ThemeProvider'
 
-interface UserProfileProps extends UserRecord, User {}
-
-export default function UserProfile({
-  profileUrl,
-  nickname,
-  email,
-  level,
-  totalAlt,
-  totalDistance,
-  totalDuration,
-  totalHikingCount,
-  totalMountainCount,
-  unreadNotificationCount,
-}: UserProfileProps) {
-  const { theme, toggleTheme } = useContext(ThemeContext)
+export default function UserProfile() {
   const navigate = useNavigate()
-  const [isOpen, setIsOpen] = useState(false)
-  const { nickname: userNickname } = useParams() as { nickname: string }
-  const { data: userInfo } = useUserQuery()
+  const { theme, toggleTheme } = useContext(ThemeContext)
+  const [isLevelModal, setIsLevelModal] = useState(false)
+  const [isConfirmModal, setIsConfirmModal] = useState(false)
+  const { nickname } = useParams() as { nickname: string }
 
-  const onClickReport = () => {
-    report('MEMBER', userNickname).then(() => {
-      toast.addMessage('success', '신고가 완료됐습니다')
-    })
-  }
+  // 내 정보
+  const {
+    data: userInfo,
+    isLoading: isUserInfoLoading,
+    isError: isUserInfoError,
+  } = useUserInfoQuery()
 
-  // 내 자신이 아니면
-  // 로그아웃, 수정, 알람버튼 숨기기
-  // 신고하기 보이기
-  const stranger = userNickname !== userInfo?.nickname ? styles.stranger : ''
+  // 프로필 정보 요청
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+  } = useProfileQuery(nickname)
 
-  // 안읽은 알람 표시
-  const unread = unreadNotificationCount ? styles.unread : ''
+  // 신고하기
+  const { mutate: reportUser } = useReport()
 
   // 다크모드 전환 토글 버튼
   const themeIcon = theme === 'light' ? <FaSun /> : <FaMoon />
 
+  if (isProfileLoading || isUserInfoLoading) {
+    return <Loading />
+  }
+
+  if (isProfileError || isUserInfoError) {
+    return <ErrorMessage />
+  }
+
+  // 내 자신이 아니면
+  // 로그아웃, 수정, 알람버튼 숨기기 / 신고하기 보이기
+  const stranger =
+    profile.nickname !== userInfo?.nickname ? styles.stranger : ''
+
+  // 안읽은 알람 표시
+  const unread = profile.unreadNotificationCount ? styles.unread : ''
+
   return (
-    <div className={styles.profile}>
-      {isOpen && (
-        <Modal onClick={() => setIsOpen(false)}>
+    <>
+      <div className={styles.profile}>
+        <div className={`${styles['alarm-siren']}`}>
+          <PageHeader color="primary" />
+          <div
+            className={`${stranger} ${styles.siren}`}
+            onClick={() => setIsConfirmModal(true)}
+          >
+            <HiLightBulb /> 신고하기
+          </div>
+          <div className={`${stranger} ${styles.alarm} ${unread}`}>
+            <IconButton
+              size="sm"
+              imgSrc={bell}
+              onClick={() => navigate('/alarm')}
+            />
+          </div>
+        </div>
+        <div className={`content ${theme} ${styles.img}`}>
+          <Image size="lg" imgUrl={profile.profileUrl} />
+        </div>
+        <div className={`content ${theme} ${styles.record}`}>
+          <div className={`${stranger} ${styles.btns}`}>
+            <IconButton
+              icon={themeIcon}
+              size="sm"
+              color="gray"
+              onClick={toggleTheme}
+            />
+            <IconButton
+              icon={<BiEdit />}
+              size="sm"
+              color="gray"
+              onClick={() => navigate('/profile/update')}
+            />
+          </div>
+          <div className={styles.username}>
+            {profile.nickname}
+            {
+              <IconButton
+                imgSrc={LEVEL_TO_IMG[profile.level]}
+                size={'sm'}
+                onClick={() => setIsLevelModal(true)}
+              />
+            }
+          </div>
+          <span className={`${stranger} ${styles.email}`}>{profile.email}</span>
+          <UserInfo
+            totalAlt={profile.totalAlt}
+            totalDistance={profile.totalDistance}
+            totalDuration={profile.totalDuration}
+            totalHikingCount={profile.totalHikingCount}
+            totalMountainCount={profile.totalMountainCount}
+          />
+        </div>
+      </div>
+      {/* 모달창 */}
+      {isLevelModal && (
+        <Modal onClick={() => setIsLevelModal(false)}>
           <LevelModal />
         </Modal>
       )}
-      <div className={`${styles['alarm-siren']}`}>
-        <PageHeader color="primary" />
-        <div className={`${stranger} ${styles.siren}`} onClick={onClickReport}>
-          <HiLightBulb /> 신고하기
-        </div>
-        <div className={`${stranger} ${styles.alarm} ${unread}`}>
-          <IconButton
-            size="sm"
-            imgSrc={bell}
-            onClick={() => navigate('/alarm')}
+      {isConfirmModal && (
+        <Modal onClick={() => setIsConfirmModal(false)}>
+          <ConfirmModal
+            title="신고하기"
+            content={`'${profile.nickname}'님을 정말 신고하시겠습니까?`}
+            buttonText="신고"
+            onClickDelete={() => {
+              reportUser({ type: 'MEMBER', id: profile.nickname })
+              setIsConfirmModal(false)
+            }}
+            onClickCloseModal={() => setIsConfirmModal(false)}
           />
-        </div>
-      </div>
-      <div className={`content ${theme} ${styles.img}`}>
-        <Image size="lg" imgUrl={profileUrl} />
-      </div>
-      <div className={`content ${theme} ${styles.record}`}>
-        <div className={`${stranger} ${styles.btns}`}>
-          <IconButton
-            icon={themeIcon}
-            size="sm"
-            color="gray"
-            onClick={toggleTheme}
-          />
-          <IconButton
-            icon={<BiEdit />}
-            size="sm"
-            color="gray"
-            onClick={() => navigate('/profile/update')}
-          />
-        </div>
-        <div className={styles.username}>
-          {nickname}
-          {level && (
-            <IconButton
-              imgSrc={LEVEL_TO_IMG[level]}
-              size={'sm'}
-              onClick={() => setIsOpen(true)}
-            />
-          )}
-        </div>
-        <span className={`${stranger} ${styles.email}`}>{email}</span>
-        <UserInfo
-          totalAlt={totalAlt}
-          totalDistance={totalDistance}
-          totalDuration={totalDuration}
-          totalHikingCount={totalHikingCount}
-          totalMountainCount={totalMountainCount}
-        />
-      </div>
-    </div>
+        </Modal>
+      )}
+    </>
   )
 }

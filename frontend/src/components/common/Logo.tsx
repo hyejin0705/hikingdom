@@ -1,5 +1,7 @@
 import React from 'react'
+
 import styles from './Logo.module.scss'
+
 import logoPng from 'assets/images/logo.png'
 
 type LogoProps = {

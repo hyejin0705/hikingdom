@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
 /*
 window 크기를 계산해서 반환하는 커스텀 훅

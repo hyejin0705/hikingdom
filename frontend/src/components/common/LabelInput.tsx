@@ -1,5 +1,7 @@
-import React, { forwardRef, ForwardedRef } from 'react'
+import React from 'react'
+
 import styles from './LabelInput.module.scss'
+
 import Label from 'components/common/Label'
 
 type LabelInputProps = {
@@ -12,22 +14,22 @@ type LabelInputProps = {
   placeholder?: string // placeholder
   type?: string // input 태그 type
   disabled?: boolean // input 태그 dsiabled
+  inputRef?: React.RefObject<HTMLInputElement>
+  autoComplete?: string
 }
-
-const LabelInput = forwardRef(function LabelInput(
-  {
-    label,
-    value,
-    onChange,
-    onKeyDown,
-    isPass = false,
-    isError = false,
-    placeholder = '',
-    type = 'text',
-    disabled = false,
-  }: LabelInputProps,
-  ref: ForwardedRef<HTMLInputElement>
-) {
+function LabelInput({
+  label,
+  value,
+  onChange,
+  onKeyDown,
+  isPass = false,
+  isError = false,
+  placeholder = '',
+  type = 'text',
+  disabled = false,
+  inputRef,
+  autoComplete = 'off',
+}: LabelInputProps) {
   const error = isError ? styles.error : ''
   const pass = isPass ? styles.pass : ''
 
@@ -35,7 +37,7 @@ const LabelInput = forwardRef(function LabelInput(
     <div className={styles.container}>
       <Label label={label} />
       <input
-        ref={ref}
+        ref={inputRef}
         id={`label-input-${label}`}
         value={value}
         onChange={onChange}
@@ -44,9 +46,10 @@ const LabelInput = forwardRef(function LabelInput(
         type={type}
         disabled={disabled}
         onKeyDown={onKeyDown}
+        autoComplete={autoComplete}
       />
     </div>
   )
-})
+}
 
 export default LabelInput

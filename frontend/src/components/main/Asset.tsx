@@ -1,9 +1,8 @@
-import React, { useRef, useState } from 'react'
-import styles from './Asset.module.scss'
-import * as THREE from 'three'
+import React from 'react'
+
 import { useLoader, useFrame } from '@react-three/fiber'
+import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-import { useSpring, animated } from '@react-spring/three'
 
 interface AssetProps {
   onClick: () => void // 닫는 함수
@@ -13,8 +12,6 @@ interface AssetProps {
 
 function Asset({ onClick, position, url }: AssetProps) {
   const asset = useLoader(GLTFLoader, url)
-  const [click, setClick] = useState(false)
-  const scaleRef = useRef(1)
 
   // 중심 기준으로 회전
   useFrame((state, delta) => {
@@ -23,7 +20,6 @@ function Asset({ onClick, position, url }: AssetProps) {
 
   const onClickZoom = () => {
     onClick()
-    setClick(true)
   }
 
   // 클릭시 크기 커짐

@@ -1,89 +1,58 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
+
 import styles from './ClubMemberPage.module.scss'
-import { ClubDetailInfo, ClubMemberList, ClubSimpleInfo } from 'types/club.interface'
+
 import {
-  getClubMember,
-  updateClubMember,
-  deleteClubMember,
-  deleteClub,
-  getClubInfo,
-  getClubSimpleInfo,
+  useDeleteClub,
+  useClubSimpleInfoQuery,
+  useClubMemberQuery,
 } from 'apis/services/clubs'
-import Toast from 'components/common/Toast'
-import Loading from 'components/common/Loading'
-import MemberList from 'components/club/MemberList'
-import useUserQuery from 'hooks/useUserQuery'
-import TextButton from 'components/common/TextButton'
-import Modal from 'components/common/Modal'
+import { useUserInfoQuery } from 'apis/services/users'
 import ConfirmModal from 'components/club/ConfirmModal'
-import { useQuery } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import MemberList from 'components/club/MemberList'
+import ErrorMessage from 'components/common/ErrorMessage'
+import Loading from 'components/common/Loading'
+import Modal from 'components/common/Modal'
+import TextButton from 'components/common/TextButton'
 
 function ClubMemberPage() {
-  const navigate = useNavigate()
-
   const [isOpen, setIsOpen] = useState(false)
-  const [clubMemberList, setClubMemberList] = useState<ClubMemberList>({
-    member: [],
-  })
 
-  const { data: userInfo } = useUserQuery()
+  const { data: userInfo } = useUserInfoQuery()
   const clubId = userInfo?.clubId
 
-  const { data: clubInfo } = useQuery<ClubDetailInfo>(
-    ['ClubDetailInfo', clubId],
-    () => getClubInfo(clubId || 0),
-    {
-      enabled: !!clubId,
-    }
-  )
+  const {
+    isLoading: isClubSimpleInfoLoading,
+    isError: isClubSimpleInfoError,
+    data: clubSimpleInfo,
+  } = useClubSimpleInfoQuery(clubId || 0)
 
-  const { data: clubSimpleInfo } = useQuery<ClubSimpleInfo>(
-    ['user', 'clubInfo'],
-    () => getClubSimpleInfo(clubId || 0),
-    {
-      enabled: !!clubId,
-    }
-  )
+  const {
+    isLoading,
+    isError,
+    data: clubMemberList,
+  } = useClubMemberQuery(clubId || 0)
 
-  useEffect(() => {
-    if (!clubId) return
-    getClubMemberList(clubId)
-  }, [clubId])
+  // 모임 탈퇴 mutation 호출
+  const { mutateAsync: deleteClub } = useDeleteClub(clubId || 0)
 
-  // 멤버 조회
-  function getClubMemberList(clubId: number) {
-    getClubMember(clubId).then((res) => setClubMemberList(res.data.result))
-  }
-
-  // 수락 함수
-  function onClickJoin(memberId: number) {
-    if (!clubId) return
-    updateClubMember(clubId, memberId)
-      .then(() => getClubMemberList(Number(clubId)))
-      .catch((err) => Toast.addMessage('error', `${err.data.message}`))
-  }
-
-  // 거절 함수
-  function onClickDelete(memberId: number) {
-    if (!clubId) return
-    deleteClubMember(clubId, memberId)
-      .then(() => getClubMemberList(Number(clubId)))
-      .catch((err) => Toast.addMessage('error', `${err.data.message}`))
-  }
-
+  // 모임 탈퇴 함수
   function onClickDeleteClub() {
     if (!clubId) return
-    deleteClub(clubId).then(() => {
-      Toast.addMessage('success', `${clubInfo?.clubName}에서 탈퇴하셨습니다`)
-      navigate('/club/none')
-    }).catch(() => {
-      Toast.addMessage('error', `클럽 호스트는 탈퇴하실 수 없습니다`)
+    deleteClub().catch(() => {
       setIsOpen(false)
     })
   }
 
-  return clubMemberList.member[0] && clubSimpleInfo ? (
+  if (isLoading || isClubSimpleInfoLoading) {
+    return <Loading />
+  }
+
+  if (isError || isClubSimpleInfoError) {
+    return <ErrorMessage />
+  }
+
+  return (
     <>
       {isOpen && (
         <Modal onClick={() => setIsOpen(false)}>
@@ -102,9 +71,8 @@ function ClubMemberPage() {
             title="가입대기"
             length={clubMemberList.request.length}
             memberList={clubMemberList.request}
-            onClickJoin={onClickJoin}
-            onClickDelete={onClickDelete}
             hostId={clubSimpleInfo.hostId}
+            isRequest={true}
           />
         )}
         <MemberList
@@ -123,8 +91,6 @@ function ClubMemberPage() {
         </div>
       </div>
     </>
-  ) : (
-    <Loading />
   )
 }
 

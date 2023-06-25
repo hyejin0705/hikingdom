@@ -1,60 +1,71 @@
-import React, { useContext, useState } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
-import LabelInput from 'components/common/LabelInput'
-import yellowLabel from 'assets/images/yellow_label.png'
-import mail from 'assets/images/mail.png'
-import calendar from 'assets/images/calendar.png'
-import mountain from 'assets/images/mountain.png'
-import LabelTextArea from 'components/common/LabelTextArea'
-import Dropdown from 'components/common/Dropdown'
-import LabelInputSelect from 'components/common/LabelInputSelect'
-import { getMountains } from 'apis/services/mountains'
-import { createMeetup } from 'apis/services/clubs'
-import styles from './CreateMeetupForm.module.scss'
-import Button from 'components/common/Button'
-import { useNavigate, useParams } from 'react-router-dom'
-import { MtInfo } from 'types/mt.interface'
-import toast from 'components/common/Toast'
-import useUserQuery from 'hooks/useUserQuery'
+import React, { useState, useMemo, useEffect } from 'react'
 
-type Option = {
-  value: string
-  label: string
-}
+import styles from './CreateMeetupForm.module.scss'
+import { Option } from 'types/common.interface'
+import { MtInfo } from 'types/mt.interface'
+
+import { useParams } from 'react-router-dom'
+
+import { useCreateMeetup } from 'apis/services/clubs'
+import { useInfiniteMountainsQuery } from 'apis/services/mountains'
+import Button from 'components/common/Button'
+import LabelInput from 'components/common/LabelInput'
+import LabelInputSelect from 'components/common/LabelInputSelect'
+import LabelTextArea from 'components/common/LabelTextArea'
+import toast from 'components/common/Toast'
+import useDebounce from 'hooks/useDebounce'
+import useRedirect from 'hooks/useRedirect'
 
 function CreateMeetupForm() {
-  const { data: userInfo } = useUserQuery()
-  const clubId = userInfo?.clubId
+  const { clubId } = useParams() as {
+    clubId: string
+  }
 
-  const navigate = useNavigate()
-  const [name, setName] = useState('')
-  const [mountain, setMountain] = useState('')
-  const [mountainOptions, setMountainOptions] = useState<Option[]>([])
-  const [mountainId, setMountainId] = useState('')
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
-  const [description, setDescription] = useState('')
+  const [parsedClubId] = useRedirect(clubId)
+
+  const [name, setName] = useState('') // 모임 이름
+  const [query, setQuery] = useState('') // 검색하는 산의 이름
+  const [mountainId, setMountainId] = useState('') // 선택된 산의 id
+  const [date, setDate] = useState('') // 모임 날짜
+  const [time, setTime] = useState('') // 모임 시간
+  const [description, setDescription] = useState('') // 모임 소개
 
   // input태그 변화에 따른 일정이름(name) 업데이트하는 함수
   function onChangeSetName(event: React.ChangeEvent<HTMLInputElement>) {
     setName(event.target.value)
   }
 
-  // input태그 변화에 따른 산 목록(mountainOptions)을 업데이트 하는 함수
+  // input태그 변화에 따른 산 조회 쿼리(query) 업데이트하는 함수
   function onChangeSetMountain(event: React.ChangeEvent<HTMLInputElement>) {
-    setMountain(event.target.value)
-    getMountains(event.target.value).then((res) => {
-      const mountainInfoArray: MtInfo[] = res.data.result.content
-      const options: Option[] = []
-      mountainInfoArray.map(({ mountainId, name }) => {
+    setQuery(event.target.value)
+  }
+
+  // useDebounce 훅으로 지연된 query(검색하려는 산의 이름) 반환
+  const debouncedQuery = useDebounce(query)
+
+  // query를 바탕으로 산 목록을 조회하는 리액트 쿼리 커스텀 훅
+  const { refetch: getMountains, data: mountainList } =
+    useInfiniteMountainsQuery(debouncedQuery)
+
+  // debouncedQuery에 따라 산 목록을 조회
+  useEffect(() => {
+    getMountains()
+  }, [debouncedQuery])
+
+  // 조회된 산 목록을 SelectBox의 prop 형태로 가공
+  const mountainOptions = useMemo(() => {
+    if (!mountainList) return []
+    const options: Option[] = []
+    mountainList.pages.flatMap((page) => {
+      page.content.forEach((mountain: MtInfo) => {
         options.push({
-          value: mountainId.toString(),
-          label: name,
+          value: String(mountain.mountainId),
+          label: mountain.name,
         })
       })
-      setMountainOptions(options)
     })
-  }
+    return options
+  }, [mountainList])
 
   // input태그 변화에 따른 일정날짜(date) 업데이트하는 함수
   function onChangeSetDate(event: React.ChangeEvent<HTMLInputElement>) {
@@ -73,34 +84,34 @@ function CreateMeetupForm() {
     setDescription(event.target.value)
   }
 
-  // 클릭 시, 모임을 생성하는 함수
+  // 모임을 생성하는 리액트 쿼리 커스텀 훅
+  const { mutate: createMeetup } = useCreateMeetup(parsedClubId)
+
+  // 클릭 시, 모임을 생성하는 리액트 쿼리 실행
   function onClickCreateMeetup() {
-    if (
-      !clubId ||
-      !name.trim() ||
-      !mountainId ||
-      !date ||
-      !time ||
-      !description.trim()
-    ) {
+    // 값이 유효하지 않을 경우, 에러 메시지 출력
+    if (!name.trim() || !mountainId || !date || !time || !description.trim()) {
       toast.addMessage('error', '모든 항목을 정확하게 기입해주세요')
       return
     }
+
+    // 모임 시작 시간이 현재 시간보다 과거일 경우, 에러 메시지 출력
     const [year, month, day] = date
       .split('-')
       .map((string: string) => parseInt(string))
+
     const [hours, minutes] = time
       .split(':')
       .map((string: string) => parseInt(string))
+
     if (new Date(year, month - 1, day, hours, minutes) < new Date()) {
       toast.addMessage('error', '과거 시간에는 일정을 생성할 수 없습니다')
       return
     }
+
+    // 인자와 함께 mutate함수 실행
     const startAt = date + ' ' + time
-    createMeetup(clubId, name, mountainId, startAt, description).then((res) => {
-      const meetupId = res.data.result.id
-      navigate(`/club/meetup/${meetupId}/detail`)
-    })
+    createMeetup({ name, mountainId, startAt, description })
   }
 
   return (
@@ -109,10 +120,10 @@ function CreateMeetupForm() {
       <LabelInputSelect
         label="산 선택"
         placeholder="산을 검색해주세요"
-        value={mountain}
+        value={query}
         onChange={onChangeSetMountain}
         options={mountainOptions}
-        setInputValue={setMountain}
+        setInputValue={setQuery}
         setOption={setMountainId}
       />
       <LabelInput

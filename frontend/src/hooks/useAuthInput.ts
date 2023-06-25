@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+
 import checkReg from 'utils/checkReg'
 
 /*
@@ -25,6 +26,11 @@ function useAuthInput({
   const [value, setValue] = useState<string>(initialValue) // initilaValue로 useState 생성
   const [isPass, setIsPass] = useState(false) // 정규식 통과 여부
   const [condition, setCondition] = useState('') // 정규식 통과 조건
+
+  // initialValue가 나중에 들어올 경우
+  useEffect(() => {
+    setValue(initialValue)
+  }, [initialValue])
 
   // input 태그의 onChange에 따라 value를 업데이트 하는 함수
   function onChange(event: React.ChangeEvent<HTMLInputElement>) {

@@ -1,5 +1,7 @@
 import React from 'react'
+
 import styles from './SearchBar.module.scss'
+
 import { BiSearch } from 'react-icons/bi'
 
 type SearchBarProps = {

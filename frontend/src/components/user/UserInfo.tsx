@@ -1,16 +1,15 @@
 import React, { useContext } from 'react'
+
 import styles from './UserInfo.module.scss'
-import { ThemeContext } from 'styles/ThemeProvider'
-
-import mountain from 'assets/images/mountain.png'
-import time from 'assets/images/hourglass.png'
-import distance from 'assets/images/shoe.png'
-import height from 'assets/images/hot_air_balloon.png'
-
 import { UserRecord } from 'types/user.interface'
 
-import { convertToKm } from 'utils/convertToKm'
-import { convertToTime } from 'utils/convertToTime'
+import height from 'assets/images/hot_air_balloon.png'
+import time from 'assets/images/hourglass.png'
+import mountain from 'assets/images/mountain.png'
+import distance from 'assets/images/shoe.png'
+import { ThemeContext } from 'styles/ThemeProvider'
+import { convertMeterToKm } from 'utils/convertMeterToKm'
+import { convertMinutesToHHMM } from 'utils/convertMinutesToHHMM'
 
 function UserInfo({
   totalAlt,
@@ -21,8 +20,8 @@ function UserInfo({
   const { theme } = useContext(ThemeContext)
 
   const mountainInfo = totalMountainCount.toString()
-  const distanceInfo = convertToKm(totalDistance).toString()
-  const altInfo = convertToKm(totalAlt).toString()
+  const distanceInfo = convertMeterToKm(totalDistance).toString()
+  const altInfo = convertMeterToKm(totalAlt).toString()
 
   return (
     <div className={`${theme} ${styles['user-info']}`}>
@@ -31,7 +30,7 @@ function UserInfo({
         <Info
           imgSrc={time}
           title={'시간'}
-          content={convertToTime(totalDuration)}
+          content={convertMinutesToHHMM(totalDuration)}
         />
       </div>
       <div className={styles['info-box']}>

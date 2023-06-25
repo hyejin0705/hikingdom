@@ -1,45 +1,28 @@
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect } from 'react'
+
+import styles from './HikingDetail.module.scss'
+
+import { AiOutlineClockCircle } from 'react-icons/ai'
+import { BiCalendarAlt } from 'react-icons/bi'
 import { useParams } from 'react-router'
 
-import styles from './TrackingInfo.module.scss'
-
-import { convertToKm } from 'utils/convertToKm'
-import { convertToTime } from 'utils/convertToTime'
-import { UserHikingDetail } from 'types/user.interface'
-import { getTrackingInfo } from 'apis/services/users'
-import { useQuery } from '@tanstack/react-query'
-import { untilMidnight } from 'utils/untilMidnight'
-
-import Loading from 'components/common/Loading'
+import { useHikingDetailQuery } from 'apis/services/users'
 import IconText from 'components/common/IconText'
-import { BiCalendarAlt } from 'react-icons/bi'
-import { AiOutlineClockCircle } from 'react-icons/ai'
+import Loading from 'components/common/Loading'
+import { convertMinutesToKorean } from 'utils/converMinutesToKorean'
+import { convertMeterToKm } from 'utils/convertMeterToKm'
 
-type TrackingInfoProps = {
+type HikingDetailProps = {
   hikingRecordId: number
   isandroid?: boolean
 }
 
-function TrackingInfo({
+function HikingDetail({
   hikingRecordId,
   isandroid = false,
-}: TrackingInfoProps) {
-  const { nickname } = useParams() as {
-    nickname: string
-  }
-
-  const queryTime = useMemo(() => {
-    return untilMidnight()
-  }, [])
-
-  const { data: detailRecord } = useQuery<UserHikingDetail>(
-    ['hikingInfo', { hikingRecordId: hikingRecordId }],
-    () => getTrackingInfo(nickname, hikingRecordId),
-    {
-      cacheTime: queryTime,
-      staleTime: queryTime,
-    }
-  )
+}: HikingDetailProps) {
+  const { nickname } = useParams() as { nickname: string }
+  const { data: detailRecord } = useHikingDetailQuery(nickname, hikingRecordId)
 
   useEffect(() => {
     if (!detailRecord) {
@@ -56,9 +39,9 @@ function TrackingInfo({
     let totalLng = 0
 
     route.forEach((path) => {
-      linePath.push(new kakao.maps.LatLng(path.lat, path.lng)),
-        (totalLat += path.lat),
-        (totalLng += path.lng)
+      linePath.push(new kakao.maps.LatLng(path.lat, path.lng))
+      totalLat += path.lat
+      totalLng += path.lng
     })
 
     const startImageSrc =
@@ -137,16 +120,19 @@ function TrackingInfo({
         {/* 거리 */}
         <Info
           title="거리"
-          content={convertToKm(detailRecord.totalDistance) + 'km'}
+          content={convertMeterToKm(detailRecord.totalDistance) + 'km'}
         />
 
         {/* 높이 */}
-        <Info title="높이" content={convertToKm(detailRecord.maxAlt) + 'km'} />
+        <Info
+          title="높이"
+          content={convertMeterToKm(detailRecord.maxAlt) + 'km'}
+        />
 
         {/* 시간 */}
         <Info
           title="시간"
-          content={convertToTime(detailRecord.totalDuration)}
+          content={convertMinutesToKorean(detailRecord.totalDuration)}
         />
       </div>
     </div>
@@ -169,4 +155,4 @@ function Info({ title, content }: InfoProps) {
   )
 }
 
-export default TrackingInfo
+export default HikingDetail

@@ -1,21 +1,19 @@
 import React, { useState } from 'react'
-import styles from './PhotoModal.module.scss'
-import toast from 'components/common/Toast'
 
+import IconText from './IconText'
+import Modal from './Modal'
+import styles from './PhotoModal.module.scss'
 import { Album } from 'types/club.interface'
+
+import { AiOutlineClockCircle } from 'react-icons/ai'
+import { BiCalendarAlt } from 'react-icons/bi'
 import { HiTrash, HiLightBulb } from 'react-icons/hi'
 
-import { report } from 'apis/services/users'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteAlbum } from 'apis/services/clubs'
-
-import useUserQuery from 'hooks/useUserQuery'
-import Modal from './Modal'
-import IconText from './IconText'
-import Image from 'components/common/Image'
+import { useDeleteAlbum } from 'apis/services/clubs'
+import { report, useUserInfoQuery } from 'apis/services/users'
 import ConfirmModal from 'components/club/ConfirmModal'
-import { BiCalendarAlt } from 'react-icons/bi'
-import { AiOutlineClockCircle } from 'react-icons/ai'
+import Image from 'components/common/Image'
+import toast from 'components/common/Toast'
 
 type PhotoModalProps = {
   photo: Album
@@ -25,21 +23,16 @@ type PhotoModalProps = {
 function PhotoModal({ photo, setState }: PhotoModalProps) {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isSirenOpen, setIsSirenOpen] = useState(false)
-  const queryClient = useQueryClient()
-  const { data: userInfo } = useUserQuery()
+  const { data: userInfo } = useUserInfoQuery()
 
-  const onClickDelete = useMutation(
-    () => deleteAlbum(Number(userInfo?.clubId), photo.photoId),
-    {
-      onSuccess: () => {
-        // 모임 앨범, 일정 앨범 query key 모두 무효화
-        queryClient.invalidateQueries(['photos'])
-        queryClient.invalidateQueries(['meetupPhotos'])
-        setState(false)
-        toast.addMessage('success', '사진이 삭제되었습니다')
-      },
-    }
+  const { mutateAsync: deleteAlbum } = useDeleteAlbum(
+    Number(userInfo?.clubId),
+    photo.photoId
   )
+
+  const onClickDelete = () => {
+    deleteAlbum().then(() => setState(false))
+  }
 
   const onClickReport = () => {
     report('ALBUM', photo.photoId)
@@ -60,7 +53,7 @@ function PhotoModal({ photo, setState }: PhotoModalProps) {
           <ConfirmModal
             title="사진을 삭제하시겠습니까?"
             buttonText="사진 삭제"
-            onClickDelete={() => onClickDelete.mutate()}
+            onClickDelete={onClickDelete}
             onClickCloseModal={() => setIsDeleteOpen(false)}
           />
         </Modal>

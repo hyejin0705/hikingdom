@@ -1,18 +1,17 @@
-import React, { useContext, useState, useEffect } from 'react'
-import { ThemeContext } from 'styles/ThemeProvider'
+import React, { useContext, useState } from 'react'
+
+import Asset from './Asset'
+import AssetModal from './AssetModal'
 import styles from './MtTitle.module.scss'
-import { convertToHour } from 'utils/convertToTime'
+import { MtAssetInfo } from 'types/mt.interface'
+
+import { Canvas } from '@react-three/fiber'
+import * as THREE from 'three'
 
 import Loading from 'components/common/Loading'
 import Modal from 'components/common/Modal'
-import AssetModal from './AssetModal'
-
-import { MtAssetInfo } from 'types/mt.interface'
-import thousandSeparator from 'utils/thousandSeparator'
-
-import * as THREE from 'three'
-import { Canvas } from '@react-three/fiber'
-import Asset from './Asset'
+import { ThemeContext } from 'styles/ThemeProvider'
+import { convertMinutesToKorean } from 'utils/converMinutesToKorean'
 
 type MtTitleProps = {
   name: string
@@ -73,13 +72,15 @@ function MtTitle({
         {/* 높이 */}
         <div className={styles.content}>
           <span className={styles.text}>높이</span>
-          <span className={styles.bold}>{thousandSeparator(maxAlt)}m</span>
+          <span className={styles.bold}>{maxAlt.toLocaleString()}m</span>
         </div>
 
         {/* 왕복시간 */}
         <div className={styles.content}>
           <span className={styles.text}>왕복</span>
-          <span className={styles.bold}>약 {convertToHour(timeDuration)}</span>
+          <span className={styles.bold}>
+            약 {convertMinutesToKorean(timeDuration)}
+          </span>
         </div>
         <div className={styles.content}></div>
       </div>

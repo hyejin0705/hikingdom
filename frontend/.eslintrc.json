@@ -7,6 +7,8 @@
     "eslint:recommended",
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:import/typescript",
+    "plugin:import/recommended",
     "prettier"
   ],
   "overrides": [],
@@ -15,11 +17,99 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["react", "@typescript-eslint"],
+  // 플러그인 상세 설정
+  "plugins": ["react", "@typescript-eslint", "import", "unused-imports"],
   "rules": {
+    // Kotlin 통신과 관련된 예외케이스
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/ban-ts-comment": "off",
-    "react/no-unknown-property": "off"
+    // React Three Fiber 사용 시, 에러 제거
+    "react/no-unknown-property": "off",
+    // eslint-plugin-import 사용 시, 실제 동작과 별개로 나타나는 빨간 줄 제거
+    "import/default": "off",
+    "import/no-unresolved": "off",
+    // eslint-plugin-unused-imports 사용 시, 설정
+    "no-unused-vars": "off", // or "@typescript-eslint/no-unused-vars": "off",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+      "warn",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    // eslint-plugin-import에 대한 실제 규칙
+    "import/order": [
+      "error",
+      {
+        "groups": ["builtin", "sibling", "external", "internal"],
+        "pathGroups": [
+          {
+            "pattern": "react",
+            "group": "builtin"
+          },
+          {
+            "pattern": "types/**",
+            "group": "sibling"
+          },
+          {
+            "pattern": "apis/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "assets/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "components/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "constants/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "hooks/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "pages/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "recoil/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "styles/**",
+            "group": "internal"
+          },
+          {
+            "pattern": "utils/**",
+            "group": "internal"
+          }
+        ],
+        "pathGroupsExcludedImportTypes": ["react", "types/**"],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ]
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {} // tsfconfig.json의 baseUrl을 인식하기 위해 필요
+    },
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/ignore": {
+      "types": [".scss"]
+    }
   }
 }

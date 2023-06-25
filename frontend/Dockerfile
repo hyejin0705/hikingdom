@@ -1,15 +1,25 @@
-FROM node:18.14.2-slim
+# build stage
+FROM node:18.14.2-slim AS build
+WORKDIR /app
 
-RUN mkdir /usr/src/app
-WORKDIR /usr/src/app
-COPY ./package* /usr/src/app/
-
+# install dependencies
+COPY package*.json ./
 RUN npm install
-RUN npm install -g serve
 
-COPY . /usr/src/app
+# copy files to docker container
+COPY . ./
 RUN npm run build
 
-EXPOSE 3000
+# production stage
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-ENTRYPOINT ["serve", "-s", "build"]
+# remove default nginx static resources
+RUN rm -rf ./*
+
+# copy images from build stage
+COPY --from=build /app/build .
+
+EXPOSE 80
+
+ENTRYPOINT ["nginx", "-g", "daemon off;"]

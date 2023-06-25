@@ -1,11 +1,14 @@
 import React, { useState } from 'react'
+
 import styles from './AgreeForm.module.scss'
-import { PERSONAL_AGREEMENT, USAGE_AGREEMENT } from 'constants/agreements'
+
 import { useNavigate } from 'react-router-dom'
-import toast from 'components/common/Toast'
+
 import Button from 'components/common/Button'
 import CheckBox from 'components/common/CheckBox'
 import LabelTextArea from 'components/common/LabelTextArea'
+import toast from 'components/common/Toast'
+import { PERSONAL_AGREEMENT, USAGE_AGREEMENT } from 'constants/agreements'
 
 function AgreeForm() {
   const navigate = useNavigate()
